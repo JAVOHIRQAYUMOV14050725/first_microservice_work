@@ -1,0 +1,66 @@
+services:
+  gateway:
+    build: ./gateway
+    restart: always
+    ports:
+      - "3001:3000"
+    networks:
+      - micronet
+
+  user_db:
+    image: postgres:16.4
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 4545
+      POSTGRES_DB: user
+    volumes:
+      - ./pgdata/user:/var/lib/postgresql/data
+    networks:
+      - micronet
+
+  product_db:
+    image: postgres:16.4
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 4545
+      POSTGRES_DB: product
+    volumes:
+      - ./pgdata/product:/var/lib/postgresql/data
+    networks:
+      - micronet
+
+  user_service:
+    build: ./user_service
+    restart: always
+    depends_on:
+      - user_db
+    environment:
+      DB_HOST: user_db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: 4545
+      DB_NAME: user
+    networks:
+      - micronet
+    ports:
+      - "3002:3002"
+
+  product_service:
+    build: ./product_service
+    restart: always
+    depends_on:
+      - product_db
+    environment:
+      DB_HOST: product_db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: 4545
+      DB_NAME: product
+    networks:
+      - micronet
+    ports:
+      - "3004:3004"
+
+networks:
+  micronet:
+    driver: bridge
